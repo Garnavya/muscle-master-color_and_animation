@@ -1,14 +1,25 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-dark: #0a0a0a;
-  --bg-surface: rgba(25, 25, 25, 0.6);
-  --orange: #FF6B35;
-  --orange-dark: #e0541f;
-  --text-main: #f5f5f5;
-  --text-muted: #999;
-  --border-subtle: rgba(255, 255, 255, 0.08);
+  --bg-dark: #080808;
+  --bg-surface: rgba(20, 20, 20, 0.7);
+  --orange: #D4AF37; /* Rich Gold */
+  --orange-dark: #AA8C2C;
+  --text-main: #FDFBF7;
+  --text-muted: #A09D96;
+  --border-subtle: rgba(212, 175, 55, 0.15); /* Subtle gold tint on borders */
   --nav-h: 80px;
+}
+
+/* Custom Text Selection */
+::selection {
+  background: var(--orange); /* Highlights text in Gold */
+  color: var(--bg-dark); /* Text turns Obsidian for contrast */
+}
+
+::-moz-selection {
+  background: var(--orange);
+  color: var(--bg-dark);
 }
 
 html {
@@ -19,9 +30,11 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Barlow', sans-serif;
-  background: var(--bg-dark);
   color: var(--text-main);
-  line-height: 1.6;
+  /* The Premium Gradient */
+  background-color: var(--bg-dark); /* Fallback */
+  background-image: radial-gradient(circle at 50% 0%, #1a1710 0%, var(--bg-dark) 70%);
+  background-attachment: fixed;
 }
 
 /* =========================================
@@ -180,16 +193,30 @@ section { padding: 100px 5%; }
 .section-tag { color: var(--orange); font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;}
 .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 40px; }
 
-/* Modern Cards */
-.plan-card, .class-card, .trainer-card, .contact-form-wrapper {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 8px;
-  transition: transform 0.3s, border-color 0.3s;
+/* Premium Glassmorphism Cards */
+.plan-card, .class-card, .trainer-card, .contact-form-wrapper, .bmi-form-card, .bmi-result-card {
+  background: rgba(20, 20, 20, 0.45); /* High transparency for the glass effect */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  
+  /* Classic Glass Edges */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.15); 
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25); /* Deep shadow to separate from background */
+  
+  /* GSAP-friendly transition curve */
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s, box-shadow 0.3s;
 }
-.plan-card:hover, .class-card:hover { transform: translateY(-5px); border-color: rgba(255,107,53,0.3); }
+
+/* Enhancing the hover state to glow with the theme color */
+.plan-card:hover, .class-card:hover { 
+  transform: translateY(-8px); 
+  border-color: rgba(255, 107, 53, 0.4); /* Uses your primary orange, matching the scheme */
+  box-shadow: 0 12px 40px 0 rgba(255, 107, 53, 0.15);
+}
 
 /* Plans specific */
 .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; }

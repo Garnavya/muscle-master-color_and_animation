@@ -1,6 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  // --- 0. FULLSCREEN VIDEO LOADER ---
+  // --- 0. CLEANUP (Fixes AOS Conflicts) ---
+  // This automatically removes old AOS attributes so GSAP can take full control
+  document.querySelectorAll('[data-aos]').forEach(el => {
+    el.removeAttribute('data-aos');
+    el.removeAttribute('data-aos-delay');
+    el.removeAttribute('data-aos-duration');
+  });
+
+  // Register GSAP ScrollTrigger
+  if (typeof gsap !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+  }
+
+  // --- 1. FULLSCREEN VIDEO LOADER & GSAP SEQUENCING ---
   const pageLoader = document.getElementById('page-loader');
   const heroVideo = document.querySelector('.hero-bg-video');
 
@@ -9,34 +22,112 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         pageLoader.classList.add('hidden');
         setTimeout(() => pageLoader.remove(), 600); 
-      }, 1000); // Shortened delay since we are now waiting for actual playback
+        // Trigger the hero GSAP animation ONLY after loader disappears
+        playHeroAnimation();
+      }, 1000); 
     };
 
-    // Check if the video is already actively playing from cache
     if (heroVideo.currentTime > 0 && !heroVideo.paused && !heroVideo.ended && heroVideo.readyState > 2) { 
       removeLoader();
     } else {
-      // Wait for the video to actually start rendering moving frames
       heroVideo.addEventListener('playing', removeLoader);
-      
-      // Fallback: If mobile strict-autoplay policies block the video, hide loader after 5 seconds
       setTimeout(removeLoader, 5000); 
     }
+  } else {
+    playHeroAnimation();
   }
-  
-  // 1. Initialize AOS
-  AOS.init({ once: true, offset: 50, duration: 800, easing: 'ease-out-cubic' });
 
-  // 2. Mobile Menu Toggle (Bulletproof Fix)
+  // --- 2. GSAP ANIMATION TIMELINES ---
+  function playHeroAnimation() {
+    if (typeof gsap === 'undefined') return;
+    
+    const heroTL = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+    heroTL.fromTo(".hero-tag", 
+      { y: 20, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 0.8 }
+    )
+    .fromTo(".hero-title", 
+      { y: 40, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 1 }, 
+      "-=0.6"
+    )
+    .fromTo(".hero-sub", 
+      { y: 20, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 0.8 }, 
+      "-=0.6"
+    )
+    .fromTo(".hero-actions a", 
+      { y: 20, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 0.6, stagger: 0.15 }, 
+      "-=0.6"
+    )
+    .fromTo(".stat-num, .stat-label", 
+      { y: 20, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 0.6, stagger: 0.1 }, 
+      "-=0.4"
+    );
+
+    // Parallax Video Effect
+    gsap.to(".hero-bg-video", {
+      yPercent: 30,
+      ease: "none",
+      scrollTrigger: {
+        trigger: "#hero",
+        start: "top top",
+        end: "bottom top",
+        scrub: true
+      }
+    });
+
+    // Staggered Grid Reveals (Reusable)
+    const animateGrid = (triggerSection, elements) => {
+      gsap.fromTo(elements, 
+        { y: 50, opacity: 0 }, 
+        {
+          y: 0, 
+          opacity: 1, 
+          duration: 0.8, 
+          ease: "power2.out",
+          stagger: 0.15,
+          scrollTrigger: {
+            trigger: triggerSection,
+            start: "top 80%",
+            toggleActions: "play none none reverse" 
+          }
+        }
+      );
+    };
+
+    animateGrid("#membership", ".plan-card");
+    animateGrid("#classes", ".class-card");
+    animateGrid("#trainers", ".trainer-card");
+    animateGrid("#gallery", ".gallery-item");
+
+    // Section Title Reveals
+    gsap.utils.toArray('.section-title, .section-tag').forEach(title => {
+      gsap.fromTo(title, 
+        { y: 30, opacity: 0 },
+        {
+          y: 0, opacity: 1, duration: 0.8, ease: "power2.out",
+          scrollTrigger: {
+            trigger: title,
+            start: "top 85%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+    });
+  }
+
+  // --- 3. MOBILE MENU TOGGLE ---
   const oldHamburger = document.getElementById('hamburger');
   const navLinks = document.getElementById('navLinks');
   
   if (oldHamburger && navLinks) {
-    // Clone the button to destroy any conflicting ghost event listeners
     const hamburger = oldHamburger.cloneNode(true);
     oldHamburger.parentNode.replaceChild(hamburger, oldHamburger);
 
-    // Add the fresh, guaranteed listener
     hamburger.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -51,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Close menu when a link is clicked
     navLinks.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => {
         navLinks.classList.remove('mobile-active');
@@ -60,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Close menu if user taps the dark background
     document.addEventListener('click', (e) => {
       if (!hamburger.contains(e.target) && !navLinks.contains(e.target) && navLinks.classList.contains('mobile-active')) {
         navLinks.classList.remove('mobile-active');
@@ -70,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. Dynamic Lead Capture (Functional EmailJS Integration)
+  // --- 4. DYNAMIC LEAD CAPTURE (EmailJS) ---
   const leadForm = document.getElementById('leadCaptureForm');
   const submitBtn = document.getElementById('submitBtn');
 
@@ -118,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. Class Trial Booking Hooks
+  // --- 5. CLASS TRIAL BOOKING HOOKS ---
   const trialButtons = document.querySelectorAll('.book-trial-btn');
   trialButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -132,18 +221,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-// --- 5. SMART IMAGE LOADER & LIGHTBOX LOGIC ---
+  // --- 6. SMART IMAGE LOADER & LIGHTBOX ---
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightbox-img');
   const closeBtn = document.querySelector('.lightbox-close');
-  
-  // Select BOTH gallery images and trainer images
   const allLazyImages = document.querySelectorAll('.gallery-img, .trainer-photo img'); 
 
   if (allLazyImages.length > 0) {
     allLazyImages.forEach(img => {
-      
-      // --- A. Loader Logic ---
       const revealImage = () => {
         img.classList.add('loaded');
         const loader = img.previousElementSibling;
@@ -152,27 +237,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       };
 
-      // Check if image loaded successfully
       if (img.complete && img.naturalHeight !== 0) {
         revealImage();
       } else {
-        // Wait for it to download...
         img.addEventListener('load', revealImage);
-        
-        // IF THE IMAGE IS MISSING (404 Error)
         img.addEventListener('error', () => {
-          // Grab the alt text (e.g., "Rahul Sharma" or "Muscle Master")
           const altText = img.alt || 'Gym';
-          
-          // Swap the broken src with a dynamically generated, premium avatar placeholder matching your color theme
           img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(altText)}&background=1a1a1a&color=FF6B35&size=500&font-size=0.33`;
-          
-          // Because we changed the src, the browser will try to download this new image, 
-          // triggering the 'load' event above, and smoothly fading it in!
         });
       }
 
-      // --- B. Lightbox Click Logic (Only apply to gallery images) ---
       if (lightbox && img.classList.contains('gallery-img')) {
         img.addEventListener('click', (e) => {
           lightbox.style.display = 'block';
@@ -183,7 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Lightbox Close Logic
   if (lightbox && closeBtn) {
     closeBtn.addEventListener('click', () => {
       lightbox.style.display = 'none';
@@ -198,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- 6. BMI CALCULATOR LOGIC ---
+  // --- 7. BMI CALCULATOR ---
   const bmiForm = document.getElementById('bmiForm');
   const bmiScore = document.getElementById('bmiScore');
   const bmiStatus = document.getElementById('bmiStatus');
@@ -208,7 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (bmiForm) {
     bmiForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      
       const heightCm = parseFloat(document.getElementById('bmiHeight').value);
       const weightKg = parseFloat(document.getElementById('bmiWeight').value);
       
@@ -218,36 +290,24 @@ document.addEventListener('DOMContentLoaded', () => {
         
         bmiScore.innerText = bmi;
         
-        let status = '';
-        let advice = '';
-        let color = '';
-        let ctaText = '';
-        let ctaLink = '';
+        let status = '', advice = '', color = '', ctaText = '', ctaLink = '';
 
         if (bmi < 18.5) {
           status = 'Underweight';
           advice = 'You might need to build some muscle mass. Check out our Elite plan for a custom meal and workout guide!';
-          color = '#3498db'; 
-          ctaText = 'View Elite Plan';
-          ctaLink = '#membership';
+          color = '#3498db'; ctaText = 'View Elite Plan'; ctaLink = '#membership';
         } else if (bmi >= 18.5 && bmi <= 24.9) {
           status = 'Normal Weight';
           advice = 'Great job! Maintain your fitness with our unlimited group classes and daily gym access.';
-          color = '#2ecc71'; 
-          ctaText = 'Explore Classes';
-          ctaLink = '#classes';
+          color = '#2ecc71'; ctaText = 'Explore Classes'; ctaLink = '#classes';
         } else if (bmi >= 25 && bmi <= 29.9) {
           status = 'Overweight';
           advice = 'A mix of our HIIT classes and strength training will help you hit your goals in no time.';
-          color = '#f39c12'; 
-          ctaText = 'Book a Free Trial';
-          ctaLink = '#classes';
+          color = '#f39c12'; ctaText = 'Book a Free Trial'; ctaLink = '#classes';
         } else {
           status = 'Obese';
           advice = 'Our personal trainers are ready to create a safe, effective, and custom transformation plan just for you.';
-          color = '#e74c3c'; 
-          ctaText = 'View Elite Plan';
-          ctaLink = '#membership';
+          color = '#e74c3c'; ctaText = 'View Elite Plan'; ctaLink = '#membership';
         }
         
         bmiStatus.innerText = status;
@@ -267,32 +327,54 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-// --- 7. BULLETPROOF SMOOTH SCROLLING ---
-  // Select all links that have a hashtag (anchor links)
+  // --- 8. SMOOTH SCROLLING ---
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
-      // Stop the browser from instantly jumping
       e.preventDefault();
-      
       const targetId = this.getAttribute('href');
-      // Ignore if it's just a dead link
       if (targetId === '#') return; 
       
       const targetElement = document.querySelector(targetId);
       if (targetElement) {
-        // Find out exactly how tall your navigation bar is dynamically
         const navHeight = document.getElementById('navbar').offsetHeight;
-        
-        // Calculate the perfect scroll position (Target element position minus the navbar height)
         const elementPosition = targetElement.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - navHeight;
 
-        // Command the browser to scroll smoothly to that exact pixel
         window.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
         });
       }
+    });
+  });
+
+  // --- 9. MAGNETIC BUTTONS ---
+  // Select all primary interactive buttons
+  const magneticButtons = document.querySelectorAll('.nav-cta, .btn-primary, .submit-btn, .plan-btn');
+
+  magneticButtons.forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const position = btn.getBoundingClientRect();
+      // Calculate cursor position relative to the button's center
+      const x = e.clientX - position.left - position.width / 2;
+      const y = e.clientY - position.top - position.height / 2;
+      
+      gsap.to(btn, {
+        x: x * 0.25, // 0.25 is the pull strength
+        y: y * 0.25,
+        duration: 0.4,
+        ease: "power2.out"
+      });
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      // Snap back to original position
+      gsap.to(btn, {
+        x: 0,
+        y: 0,
+        duration: 0.6,
+        ease: "elastic.out(1, 0.4)"
+      });
     });
   });
 
