@@ -1,25 +1,25 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-dark: #080808;
+  --bg-dark: #0a0a0a;
   --bg-surface: rgba(20, 20, 20, 0.7);
-  --orange: #D4AF37; /* Rich Gold */
-  --orange-dark: #AA8C2C;
-  --text-main: #FDFBF7;
-  --text-muted: #A09D96;
-  --border-subtle: rgba(212, 175, 55, 0.15); /* Subtle gold tint on borders */
+  --orange: #FF6B35; /* Classic energetic gym orange */
+  --orange-dark: #E55A2B;
+  --text-main: #ffffff;
+  --text-muted: #a0a0a0;
+  --border-subtle: rgba(255, 107, 53, 0.15);
   --nav-h: 80px;
 }
 
 /* Custom Text Selection */
 ::selection {
-  background: var(--orange); /* Highlights text in Gold */
-  color: var(--bg-dark); /* Text turns Obsidian for contrast */
+  background: var(--orange);
+  color: #ffffff; /* Swapped to white for better contrast with orange */
 }
 
 ::-moz-selection {
   background: var(--orange);
-  color: var(--bg-dark);
+  color: #ffffff;
 }
 
 html {
@@ -29,12 +29,11 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Barlow', sans-serif;
   color: var(--text-main);
-  /* The Premium Gradient */
-  background-color: var(--bg-dark); /* Fallback */
-  background-image: radial-gradient(circle at 50% 0%, #1a1710 0%, var(--bg-dark) 70%);
-  background-attachment: fixed;
+  background-color: var(--bg-dark);
+  /* Subtle orange spotlight gradient */
+  background-image: radial-gradient(circle at 50% 0%, rgba(255, 107, 53, 0.12) 0%, var(--bg-dark) 70%);
+  background-attachment: fixed; 
 }
 
 /* =========================================
